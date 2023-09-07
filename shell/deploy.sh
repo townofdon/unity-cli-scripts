@@ -81,7 +81,7 @@ fi
 log "deploying to itch.io..."
 
 # push to itch.io
-# butler push $ZIPFILE "${USERNAME}/${GAME}:${CHANNEL}" --userversion $VERSION
+butler push $ZIPFILE "${USERNAME}/${GAME}:${CHANNEL}" --userversion $VERSION
 
 # cleanup
 rm -rf "./NUL"

@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 
 import { logger } from './utils/logger.js';
 import { confirm } from './utils/confirm.js';
+import { validateVersion } from './utils/validateVersion.js'
 
 export const versionCommand = {
   command: 'version',
@@ -79,11 +80,5 @@ export const versionCommand = {
     } catch (error) {
       logger.errorAndExit(error.message)
     }
-  }
-}
-
-function validateVersion(version) {
-  if (!semver.valid(version)) {
-    throw new Error(`\"${version}\" is not a valid semantic version`)
   }
 }
