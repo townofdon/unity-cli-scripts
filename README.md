@@ -90,7 +90,7 @@ Here's the manual testing process if you ever should need it:
 
 ## Contributing
 
-Feel free to submit a PR, fork this repo, or just steal it for your own usage. If it helps you in any way, I'm glad :simple_smile:
+Feel free to submit a PR, fork this repo, or just steal it for your own usage. If it helps you in any way, I'm glad 😄
 
 ## Links
 
