@@ -2,6 +2,16 @@
 
 import chalk from 'chalk';
 
+function heading(msg) {
+    console.log(chalk.bgYellow(chalk.black(' ' + msg + ' ')));
+    return logger;
+}
+
+function newline() {
+    console.log("");
+    return logger;
+}
+
 function info(msg) {
     console.log(msg);
 }
@@ -29,4 +39,6 @@ export const logger = {
     success,
     error,
     errorAndExit,
+    heading,
+    newline,
 };
