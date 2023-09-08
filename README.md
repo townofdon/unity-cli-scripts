@@ -7,7 +7,7 @@ A growing collection of CLI commands used for the Unity engine. The aim is to au
 Steps to get up and running:
 
 - Run `npm install`
-- Add an `.env` file to the root directory of this repo - see `.env.example` as a reference.
+- Add an `.env` file to the root directory of this repo - see [.env.example](./.env.example) as a reference.
 
 ## Commands
 
@@ -58,7 +58,7 @@ Bump the version in the Unity build. This updates the Unity `ProjectSettings.ass
 
 ### ⚡ `uniq-uuid`
 
-Search through entire project for duplicate UUID fields, and replace duplicates with newly-generated UUIDs. Useful for custom save systems.
+Find and auto-fix duplicate UUID fields in entire project. Useful for custom save systems.
 
 NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` files).
 
@@ -79,10 +79,13 @@ NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` 
 &nbsp;
 ### ⚡ `deploy`
 
-This command utilizes [Butler](https://itch.io/board/24575/butler) to automatically upload builds to Itch.io.
+Deploy a build to Itch.io using [Butler](https://itch.io/board/24575/butler).
 
-It reads the current Unity project version in `ProjectSettings.asset`, zips up the
-build contents, and sends them off to their new home on Itch.io.
+**Steps:**
+
+1. [Create a build in Unity](https://docs.unity3d.com/Manual/PublishingBuilds.html)
+1. Ensure `UNITY_WEBGL_BUILD_DIR` is set correctly in [.env](./.env.example#L4C1-L4C22)
+1. Run the command below
 
 ```
 ./bin/cli.js deploy
@@ -92,10 +95,14 @@ build contents, and sends them off to their new home on Itch.io.
 
 ### ⚡ `webgl`
 
-A docker setup is used to run a unity webgl build locally. This copies the files from the Unity build you designated in the `.env` file to a temp dir.
-Then, a server starts up which hosts the local webgl build.
+Run a local webgl server. Requires [Docker](https://docs.docker.com/desktop/install/mac-install/).
 
 This is a great way to quickly test a local build independent of the Unity interface to make sure everything is set up correctly.
+
+**Steps:**
+
+1. Ensure `UNITY_WEBGL_BUILD_DIR` is set correctly in [.env](./.env.example#L4C1-L4C22)
+1. Run the command below
 
 ```
 ./bin/cli.js webgl
