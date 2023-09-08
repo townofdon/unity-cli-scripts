@@ -32,7 +32,7 @@ To see full list of commands, you can run:
 
 &nbsp;
 
-### [CMD] `version`
+### >> `version`
 
 Bump the version in the Unity build. This updates the Unity `ProjectSettings.asset` file.
 
@@ -56,7 +56,7 @@ Bump the version in the Unity build. This updates the Unity `ProjectSettings.ass
 
 &nbsp;
 
-### [CMD] `uniq-uuid`
+### >> `uniq-uuid`
 
 Search through entire project for duplicate UUID fields, and replace duplicates with newly-generated UUIDs. Useful for custom save systems.
 
@@ -77,7 +77,7 @@ NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` 
 | `--verbose`       | verbose printout                                           | false          |
 
 &nbsp;
-### [CMD] `deploy`
+### >> `deploy`
 
 This command utilizes [Butler](https://itch.io/board/24575/butler) to automatically upload builds to Itch.io.
 
@@ -90,7 +90,7 @@ build contents, and sends them off to their new home on Itch.io.
 
 &nbsp;
 
-### [CMD] `webgl`
+### >> `webgl`
 
 A docker setup is used to run a unity webgl build locally. This copies the files from the Unity build you designated in the `.env` file to a temp dir.
 Then, a server starts up which hosts the local webgl build.
