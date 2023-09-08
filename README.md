@@ -30,7 +30,9 @@ To see full list of commands, you can run:
 ./bin/cli.js --help
 ```
 
-### [CMD] Version Bump
+&nbsp;
+
+### [CMD] `version`
 
 Bump the version in the Unity build. This updates the Unity `ProjectSettings.asset` file.
 
@@ -52,8 +54,9 @@ Bump the version in the Unity build. This updates the Unity `ProjectSettings.ass
 | `--dry`           | perform a dry run                                          | Boolean        |
 | `--verbose`       | verbose printout (used only with `--dry`)                  | Boolean        |
 
+&nbsp;
 
-### [CMD] Uniq UUID
+### [CMD] `uniq-uuid`
 
 Search through entire project for duplicate UUID fields, and replace duplicates with newly-generated UUIDs. Useful for custom save systems.
 
@@ -73,7 +76,8 @@ NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` 
 | `--dry`           | perform a dry run                                          | false          |
 | `--verbose`       | verbose printout                                           | false          |
 
-### [CMD] Deploy
+&nbsp;
+### [CMD] `deploy`
 
 This command utilizes [Butler](https://itch.io/board/24575/butler) to automatically upload builds to Itch.io.
 
@@ -84,7 +88,9 @@ build contents, and sends them off to their new home on Itch.io.
 ./bin/cli.js deploy
 ```
 
-### [CMD] WebGL
+&nbsp;
+
+### [CMD] `webgl`
 
 A docker setup is used to run a unity webgl build locally. This copies the files from the Unity build you designated in the `.env` file to a temp dir.
 Then, a server starts up which hosts the local webgl build.
