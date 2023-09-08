@@ -1,6 +1,6 @@
 # Unity CLI Scripts
 
-This is a collection of CLI commands I've cobbled together to make life easier for future-me. Hopefully you can find these useful, too.
+A growing collection of CLI commands used for the Unity engine. Automating tasks such as bumping the version number, finding duplicate saveable-entity uuids, deploying, starting a webgl server locally, etc.
 
 ## Setup
 
@@ -11,14 +11,16 @@ Steps to get up and running:
 
 ## Commands
 
-All available commands can be invoked like so:
+Commands can be invoked like so:
 
 ```
 ./bin/cli.js <command>
+# or
+npm start <command> -- <args>
 
 # example
-./bin/cli.js version
-./bin/cli.js deploy
+./bin/cli.js version --major
+npm start version -- --major
 # etc.
 ```
 
@@ -28,20 +30,9 @@ To see full list of commands, you can run:
 ./bin/cli.js --help
 ```
 
-Alternatively, you can run commands using the Node binary:
-
-```
-npm start <command> -- <args>
-
-# example
-npm start version -- --major
-```
-
 ### [CMD] Version Bump
 
 Bump the version in the Unity build. This updates the Unity `ProjectSettings.asset` file.
-
-You can specify `--major`, `--minor`, or `--patch`. Alternatively you can supply the version manually via `--set <version>`
 
 ```
 ./bin/cli.js version --major
@@ -50,17 +41,44 @@ You can specify `--major`, `--minor`, or `--patch`. Alternatively you can supply
 ./bin/cli.js version --set 1.2.3
 ```
 
-Other options:
+**Options**
 
-- `--dry` - perform a dry run with no changes
-- `--verbose` - use in conjunction with `--dry` - print out the full contents of `ProjectSettings.asset` to see what the changes will be.
+| Flag           | Desc                                                          | Type           |
+|-------------------|------------------------------------------------------------|----------------|
+| `--major`         | perform a major version bump                               | Boolean        |
+| `--minor`         | perform a minor version bump                               | Boolean        |
+| `--patch`         | perform a patch version bump                               | Boolean        |
+| `--set`           | manually set the version number                            | String         |
+| `--dry`           | perform a dry run                                          | Boolean        |
+| `--verbose`       | verbose printout (used only with `--dry`)                  | Boolean        |
+
+
+### [CMD] Uniq UUID
+
+Search through entire project for duplicate UUID fields, and replace duplicates with newly-generated UUIDs. Useful for custom save systems.
+
+NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` files).
+
+```
+./bin/cli.js uniq-uuid
+```
+
+**Options**
+
+| Flag           | Desc                                                          | Default        |
+|-------------------|------------------------------------------------------------|----------------|
+| `--monobehaviour` | name of the MonoBehaviour                                  | SaveableEntity |
+| `--uuidfield`     | name of the uuid field to make unique                      | _uuid          |
+| `--assetsdir`     | directory where to search for project assets               | Assets         |
+| `--dry`           | perform a dry run                                          | false          |
+| `--verbose`       | verbose printout                                           | false          |
 
 ### [CMD] Deploy
 
 This command utilizes [Butler](https://itch.io/board/24575/butler) to automatically upload builds to Itch.io.
 
-It reads the current Unity project version in `ProjectSettings.asset`, prompts you to make sure all is well, and then zips up the
-build contents and sends them off to their new home on Itch.io.
+It reads the current Unity project version in `ProjectSettings.asset`, zips up the
+build contents, and sends them off to their new home on Itch.io.
 
 ```
 ./bin/cli.js deploy
@@ -88,9 +106,13 @@ Here's the manual testing process if you ever should need it:
 - Point browser to `localhost://8080`
 - `docker-compose down` to cleanup processes
 
+
+&nbsp;
+
+&nbsp;
 ## Contributing
 
-Feel free to submit a PR, fork this repo, or just steal it for your own usage. If it helps you in any way, I'm glad 😄
+Feel free to submit a PR, fork this repo, or steal it for your own usage.
 
 ## Links
 
