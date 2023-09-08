@@ -1,6 +1,6 @@
 # Unity CLI Scripts
 
-A growing collection of CLI commands used for the Unity engine. Automating tasks such as bumping the version number, finding duplicate saveable-entity uuids, deploying, starting a webgl server locally, etc.
+A growing collection of CLI commands used for the Unity engine. The aim is to automate tasks such as bumping the version number, fixing duplicate saveable-entity uuids, deploying, starting a webgl server locally, etc.
 
 ## Setup
 
