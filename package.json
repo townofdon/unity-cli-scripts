@@ -9,7 +9,7 @@
     "type": "module",
     "scripts": {
         "start": "bin/cli.js",
-        "test": "bin/cli.js test"
+        "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "donjuanjavier",
     "license": "MIT",

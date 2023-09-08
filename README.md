@@ -84,7 +84,7 @@ build contents, and sends them off to their new home on Itch.io.
 ./bin/cli.js deploy
 ```
 
-### [CMD] Testing Locally
+### [CMD] WebGL
 
 A docker setup is used to run a unity webgl build locally. This copies the files from the Unity build you designated in the `.env` file to a temp dir.
 Then, a server starts up at `localhost://8080` where you can run your webgl build.
@@ -92,10 +92,7 @@ Then, a server starts up at `localhost://8080` where you can run your webgl buil
 This is a great way to quickly test a local build independent of the Unity interface to make sure everything is set up correctly.
 
 ```
-./bin/cli.js test
-
-# or, alternatively:
-npm test
+./bin/cli.js webgl
 ```
 
 Here's the manual testing process if you ever should need it:

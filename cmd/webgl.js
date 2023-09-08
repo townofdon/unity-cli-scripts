@@ -2,8 +2,8 @@ import { execFileSync } from 'child_process';
 
 import { logger } from './utils/logger.js';
 
-export const testCommand = {
-    command: 'test',
+export const webglCommand = {
+    command: 'webgl',
     desc: 'test a Unity build locally using Docker',
     builder: (yargs) => {
         return yargs
@@ -11,7 +11,7 @@ export const testCommand = {
     handler: async function (options) {
         try {
             process.chdir('./shell');
-            execFileSync('./test.sh', { stdio: 'inherit' });
+            execFileSync('./webgl.sh', { stdio: 'inherit' });
         } catch (error) {
             logger.errorAndExit(error.message)
         }
