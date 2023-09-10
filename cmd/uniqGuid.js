@@ -11,59 +11,67 @@ export const uniqGuidCommand = {
   desc: 'check for duplicate guids and make them unique',
   builder: (yargs) => {
     return yargs
-      .option("monobehaviour", { describe: "name of the MonoBehaviour (file name must match the class)", type: "string", default: "MonoSaveable" })
       .option("uuidfield", { describe: "name of the uuid field to make unique", type: "string", default: '_uuid' })
-      .option("assetsdir", { describe: "directory where to search for project assets", type: "string", default: 'Assets' })
+      .option("searchdir", { describe: "directory where to search for project assets", type: "string", default: 'Assets' })
       .option("dry", { describe: "perform a dry run", type: "boolean" })
       .option("verbose", { describe: "print out more stuff when running script", type: "boolean" })
   },
   handler: async function (options) {
     try {
       if (!process.env.UNITY_PROJECT_ROOT) throw new Error("UNITY_PROJECT_ROOT is missing from .env file");
+      if (options.uuidfield == 'guid') throw new Error("--uuidfield cannot be \"guid\" as this will clash with internal unity guids");
 
-      const assetsPath = options.assetsdir;
-      const uuidField = options.uuidfield;
-      const monobehaviourName = options.monobehaviour;
-
-      const projectRoot = path.resolve(process.env.UNITY_PROJECT_ROOT);
-      const assetsDir = path.resolve(projectRoot, assetsPath);
-      const monobehaviourGuid = getMonobehaviourGuid(monobehaviourName, projectRoot);
-
-      if (monobehaviourGuid === null) {
-        throw new Error(`Could not find ${`${monobehaviourName}.cs.meta`} in project ${projectRoot}`);
+      if (options.dry) {
+        logger.newline().heading('    >>> DRY MODE <<<    ').heading('no changes will be made!').newline();
+      } else {
+        logger.newline();
       }
 
-      logger.info(`Found MonoBehaviour "${chalk.yellow(monobehaviourName)}" with guid: ${chalk.yellow(monobehaviourGuid)}`)
-      logger.info('Searching for relevant files in project...');
+      const searchPath = options.searchdir;
+      const uuidField = options.uuidfield;
 
-      const files = getFilesFlatList(assetsDir);
+      const projectRoot = path.resolve(process.env.UNITY_PROJECT_ROOT);
+      const searchDir = path.resolve(projectRoot, searchPath);
+
+      logger.info(`Searching for relevant files in project at ${chalk.yellow(searchDir)} ...`);
+
+      const files = getFilesFlatList(searchDir);
 
       if (options.verbose) {
-        logger.newline().heading("all relevant files:");
+        logger.newline().heading("all files to be searched:");
         files.forEach(file => logger.warn(file));
         logger.newline();
       }
 
       logger.info('Finding duplicate uuids...');
 
-      const { duplicates, uuids } = getDuplicates(files, uuidField, monobehaviourGuid);
+      const { duplicates, uuids } = getDuplicates(files, uuidField);
+
+      if (uuids.length == 0) throw new Error("No uuids found - ensure \"--uuidfield\" param is correct")
+
+      logger.info(`Found ${chalk.cyan(uuids.length)} uuids across project`);
 
       if (options.verbose) {
-        logger.newline().heading("all uuids:");
+        logger.newline().heading("all uuids found:");
         uuids.forEach(uuid => logger.warn(uuid));
-        logger.newline().heading("duplicates:");
-        duplicates.forEach(dupe => console.log(dupe));
-        console.log("");
+        logger.newline();
+        logger.heading("duplicates:");
+        duplicates.forEach(dupe => console.log({
+          ...dupe,
+          lineNumber: dupe.lineNumber + 1,
+          replacement: dupe.replacement.replace("%s", "<new_uuid>"),
+        }));
         logger.newline();
       }
 
       if (duplicates.length > 0) {
-        if (options.dry) {
-          logger.newline().warn(`Found ${chalk.redBright(duplicates.length)} duplicates.`)
-        } else {
-          logger.newline().info(`Found ${chalk.redBright(duplicates.length)} duplicates. Generate new UUIDs and replace duplicates?`)
+        logger.newline().warn(`Found ${chalk.redBright(duplicates.length)} duplicates.`)
+        if (!options.dry) {
+          logger.newline().info("Generate new UUIDs for duplicates?");
           await confirm();
-          replaceDuplicateUuids(duplicates, uuidField, options);
+        }
+        replaceDuplicateUuids(duplicates, options);
+        if (!options.dry) {
           logger.newline().success('All done!');
         }
       } else {
@@ -104,107 +112,111 @@ const getFilesFlatList = (rootDirectory) => {
   return files;
 }
 
-const getMonobehaviourGuid = (monobehaviourName = "", rootDirectory) => {
-  if (!monobehaviourName) return null;
-
-  const state = {
-    filePath: '',
-    guid: ''
-  }
-
-  const find = (currentDir) => {
-    const files = fs.readdirSync(currentDir)
-    for (let i = 0; i < files.length; i++) {
-      const absPath = path.join(currentDir, files[i]);
-      if (files[i] === `${monobehaviourName}.cs.meta`) {
-        state.filePath = absPath;
-        return true;
-      }
-      if (fs.statSync(absPath).isDirectory()) {
-        const found = find(absPath);
-        if (found) return true;
-      }
-    }
-    return false;
-  };
-
-  const found = find(rootDirectory);
-  if (found) {
-    const contents = fs.readFileSync(state.filePath);
-    const regex = /^guid: (.*)$/m;
-    const matches = regex.exec(contents);
-    if (matches != null && matches.length > 0) {
-      // first match is always the full match result; subsequent are the regex capture groups
-      state.guid = matches[1]
-      return state.guid;
-    }
-  }
-  return null;
-}
-
 /**
  * Get duplicates
  * @param {string[]} files 
  * @param {string} uuidField
- * @param {string} monobehaviourGuid
- * @returns {{ duplicates: { uuid: string, file: string, lineNumber: number }[], uuids: string[] }} results
+ * @returns {{ duplicates: { uuid: string, file: string, lineNumber: number, replacement: string }[], uuids: string[] }} results
  */
-const getDuplicates = (files, uuidField, monobehaviourGuid) => {
+const getDuplicates = (files, uuidField) => {
   const uuids = []
   const duplicates = []
   const uuidMap = {}
-  const uuidRegex = new RegExp(`^\\s+${uuidField}:\\s+(.*)$`, 'm');
+
+  // search for a line in the .meta file like "_uuid: <value>"
+  const regexUUID = new RegExp(`^\\s+${uuidField}:\\s+(.*)$`, 'm');
+
+  // search for a line in the .meta file like "propertyPath: _uuid" - additional work will need to be done to find the actual uuid line
+  const regexPropertyPath = new RegExp(`^\\s+propertyPath:\\s+${uuidField}$`, 'm');
+
+  // search for a line in the .meta file like "value: <value>"
+  const regexValueField = /^\s+value: (.*)$/m;
+  const regexFirstNonWhitespace = /[-_a-zA-Z0-9]/;
+
+  const checkMatchFound = ({ matches, file = "", lineNumber = -1, indentation = 0, replacement = '' } = {}) => {
+    if (!matches || matches.length !== 2) return false;
+    if (!file) return false;
+    if (lineNumber === -1) return false;
+
+    const uuid = matches[1];
+    if (uuidMap[uuid]) {
+      duplicates.push({
+        uuid,
+        file,
+        lineNumber,
+        indentation,
+        replacement,
+      });
+    } else {
+      uuidMap[uuid] = true;
+    }
+
+    uuids.push(uuid);
+    return true;
+  }
 
   files.forEach(file => {
     const contentsRaw = fs.readFileSync(file);
-    if (!contentsRaw) return;
+    if (!contentsRaw)
+      return;
 
     const contents = contentsRaw.toString('utf8');
-    if (!contents.includes(monobehaviourGuid)) return;
-    if (!contents.includes(uuidField)) return;
+
+    if (!contents.includes(uuidField))
+      return;
 
     const lines = contents.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const matches = line.match(uuidRegex);
-      if (!matches || !matches.length) continue;
 
-      const uuid = matches[1];
+      // get num spaces to first character
+      const indentation = line.search(regexFirstNonWhitespace);
+      if (indentation < 0)
+        continue;
 
-      // iterate backwards, looking for two things: "guid: <monobehaviourGuid>" match, as well as "MonoBehaviour" indicating that this obj is in fact a MonoBehaviour
-      let isMonoBehaviour = false;
-      let hasMonoGuid = false;
+      // look for "_uuid: <value>" field
+      let matches = line.match(regexUUID);
+      if (checkMatchFound({ matches, file, lineNumber: i, indentation, replacement: `${uuidField}: %s` }))
+        continue;
+
+      // break if at end
+      if (i == lines.length - 1)
+        break;
+
+      // look for "propertyPath: _uuid" field
+      matches = line.match(regexPropertyPath);
+      if (!matches || !matches.length)
+        continue;
+
+      let indentationNext = -1;
+
+      // walk forward, looking for the "value: <value>" field
+      // use a simple indentation comparison to ensure that we are still evaluating the same obj
       let j = i;
-      while (!hasMonoGuid && !isMonoBehaviour && j > 0) {
-        if (lines[j].includes('MonoBehaviour:')) { isMonoBehaviour = true; break; }
-        if (lines[j].includes(`guid: ${monobehaviourGuid}`)) { hasMonoGuid = true; break; }
-        if (lines[j].includes('---')) { break; }
+      do {
+        j++;
+        indentationNext = lines[j].search(regexFirstNonWhitespace);
+        if (indentation != indentationNext)
+          continue;
+        matches = lines[j].match(regexValueField);
+        if (checkMatchFound({ matches, file, lineNumber: j, indentation, replacement: 'value: %s' }))
+          break;
+      } while (indentationNext == indentation && j < lines.length - 1);
+
+      if (i == 0)
+        continue;
+
+      // walk backwards, looking for the "value: <value>" field
+      j = i;
+      do {
         j--;
-      }
-
-      if (isMonoBehaviour && !hasMonoGuid) {
-        // iterate forwards and see if we can find the MonoGuid match
-        j = i
-        while (!hasMonoGuid && j < lines.length) {
-          if (lines[j].includes(`guid: ${monobehaviourGuid}`)) { hasMonoGuid = true; break; }
-          if (lines[j].includes('---')) { break; }
-          j++;
-        }
-      }
-
-      if (!hasMonoGuid) continue;
-
-      if (uuidMap[uuid]) {
-        duplicates.push({
-          uuid,
-          file,
-          lineNumber: i,
-        });
-      } else {
-        uuidMap[uuid] = true;
-      }
-
-      uuids.push(uuid);
+        indentationNext = lines[j].search(regexFirstNonWhitespace);
+        if (indentation != indentationNext)
+          continue;
+        matches = lines[j].match(regexValueField);
+        if (checkMatchFound({ matches, file, lineNumber: j, indentation, replacement: 'value: %s' }))
+          break;
+      } while (indentationNext == indentation && j > 0);
     }
   })
 
@@ -213,30 +225,70 @@ const getDuplicates = (files, uuidField, monobehaviourGuid) => {
 
 /**
  * Replace duplicates
- * @param {{ uuid: string, file: string, lineNumber: number }[]} duplicates
- * @param {string} uuidField
+ * @param {{ uuid: string, file: string, lineNumber: number, indentation: number, replacement: string }[]} duplicates
  */
-const replaceDuplicateUuids = (duplicates, uuidField, options) => {
+const replaceDuplicateUuids = (duplicates, options) => {
   logger.newline();
-  duplicates.forEach(dupe => {
-    const contentsRaw = fs.readFileSync(dupe.file);
+  const files = getUniqFilesFromDuplicates(duplicates);
+
+  files.forEach(file => {
+    const contentsRaw = fs.readFileSync(file);
     if (!contentsRaw) return;
+
     const contents = contentsRaw.toString('utf8');
     const lines = contents.split('\n');
-    if (lines.length <= dupe.lineNumber) {
-      if (options.verbose) logger.error(`file ${dupe.file} had less lines (${lines.length}) than dupe line number (${dupe.lineNumber})`);
-      return;
-    }
-    if (!lines[dupe.lineNumber].includes(dupe.uuid)) {
-      if (options.verbose) logger.error(`file line ${dupe.lineNumber} did not include dupe uuid (${dupe.uuid}) - line: ${lines[dupe.lineNumber]}`);
-      return;
-    }
-    const newUuid = uuid();
-    const newLine = `  ${uuidField}: ${newUuid}`;
-    const newContent = lines.map((line, index) => index === dupe.lineNumber ? newLine : line).join('\n');
+    const filteredDuplicates = duplicates.filter(dupe => dupe.file === file);
 
-    fs.writeFileSync(dupe.file, newContent);
+    const newLines = lines.map((line, index) => {
+      const dupe = filteredDuplicates.find(dupe => dupe.lineNumber === index);
+      if (!dupe) return line;
 
-    logger.info(`${chalk.cyan(getFileWithoutAbsPath(dupe.file))}: generated new uuid at line ${chalk.green(dupe.lineNumber + 1)} => ${chalk.green(newUuid)}`)
+      const newUuid = uuid();
+      const newLine = ''.padStart(dupe.indentation, ' ') + dupe.replacement.replace('%s', newUuid);
+
+      if (options.dry) {
+        const lineStart = Math.max(index - 5, 0);
+        const lineEnd = Math.min(index + 5, lines.length - 1);
+        let i = lineStart;
+        logger.warn(`${file} L${lineStart}..${lineEnd}`);
+        while (i <= lineEnd) {
+          if (i === dupe.lineNumber) {
+            logger.info(chalk.red(`-${i + 1} ${lines[i]}`));
+            logger.info(chalk.green(`+${i + 1} ${newLine}`));
+          } else {
+            logger.dim(` ${i + 1} ${lines[i]}`);
+          }
+          i++;
+        }
+        logger.newline();
+      } else {
+        logger.info(`${chalk.cyan(getFileWithoutAbsPath(dupe.file))}: generated new uuid at line ${chalk.green(dupe.lineNumber + 1)} => ${chalk.green(newUuid)}`)
+      }
+
+      return newLine;
+    });
+
+    const newContent = newLines.join('\n');
+
+    if (!options.dry) {
+      fs.writeFileSync(file, newContent);
+    }
   });
+}
+
+/**
+ * Get unique files from duplicates list
+ * @param {{ uuid: string, file: string, lineNumber: number }[]} duplicates
+ * @returns {string[]} files
+ */
+const getUniqFilesFromDuplicates = (duplicates) => {
+  if (!duplicates || !duplicates.length) return [];
+
+  const fileMap = {};
+
+  duplicates.forEach(dupe => {
+    fileMap[dupe.file] = dupe.file;
+  });
+
+  return Object.keys(fileMap);
 }
