@@ -1,6 +1,4 @@
-import yaml from 'yaml'
 import chalk from 'chalk';
-import semver from 'semver'
 import path from 'path';
 import fs from 'fs-extra';
 import { v4 as uuid } from 'uuid';
@@ -13,7 +11,7 @@ export const uniqGuidCommand = {
   desc: 'check for duplicate guids and make them unique',
   builder: (yargs) => {
     return yargs
-      .option("monobehaviour", { describe: "name of the MonoBehaviour (file name must match the class)", type: "string", default: "SaveableEntity" })
+      .option("monobehaviour", { describe: "name of the MonoBehaviour (file name must match the class)", type: "string", default: "MonoSaveable" })
       .option("uuidfield", { describe: "name of the uuid field to make unique", type: "string", default: '_uuid' })
       .option("assetsdir", { describe: "directory where to search for project assets", type: "string", default: 'Assets' })
       .option("dry", { describe: "perform a dry run", type: "boolean" })
@@ -35,7 +33,7 @@ export const uniqGuidCommand = {
         throw new Error(`Could not find ${`${monobehaviourName}.cs.meta`} in project ${projectRoot}`);
       }
 
-      logger.info(`Found MonoBehaviour \"${chalk.yellow(monobehaviourName)}\" with guid: ${chalk.yellow(monobehaviourGuid)}`)
+      logger.info(`Found MonoBehaviour "${chalk.yellow(monobehaviourName)}" with guid: ${chalk.yellow(monobehaviourGuid)}`)
       logger.info('Searching for relevant files in project...');
 
       const files = getFilesFlatList(assetsDir);
