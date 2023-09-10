@@ -14,18 +14,27 @@ function newline() {
 
 function info(msg) {
     console.log(msg);
+    return logger;
+}
+
+function dim(msg) {
+    console.log(chalk.dim(msg));
+    return logger;
 }
 
 function warn(msg) {
     console.log(chalk.yellow(msg));
+    return logger;
 }
 
 function success(msg) {
     console.log(chalk.green(`✓ ${msg}`));
+    return logger;
 }
 
 function error(msg) {
     console.log(chalk.red(msg));
+    return logger;
 }
 
 function errorAndExit(msg) {
@@ -35,6 +44,7 @@ function errorAndExit(msg) {
 
 export const logger = {
     info,
+    dim,
     warn,
     success,
     error,
