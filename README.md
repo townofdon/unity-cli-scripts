@@ -52,7 +52,7 @@ Bump the version in the Unity build. This updates the Unity `ProjectSettings.ass
 | `--patch`         | perform a patch version bump                               | Boolean        |
 | `--set`           | manually set the version number                            | String         |
 | `--dry`           | perform a dry run                                          | Boolean        |
-| `--verbose`       | verbose printout (used only with `--dry`)                  | Boolean        |
+| `--verbose`       | verbose printout (only used in conjunction with `--dry`)   | Boolean        |
 
 &nbsp;
 
@@ -70,9 +70,8 @@ NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` 
 
 | Flag           | Desc                                                          | Default        |
 |-------------------|------------------------------------------------------------|----------------|
-| `--monobehaviour` | name of the MonoBehaviour                                  | SaveableEntity |
 | `--uuidfield`     | name of the uuid field to make unique                      | _uuid          |
-| `--assetsdir`     | directory where to search for project assets               | Assets         |
+| `--searchdir`     | directory where to search for project assets               | Assets         |
 | `--dry`           | perform a dry run                                          | false          |
 | `--verbose`       | verbose printout                                           | false          |
 
