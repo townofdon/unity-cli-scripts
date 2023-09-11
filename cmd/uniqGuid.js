@@ -4,7 +4,8 @@ import fs from 'fs-extra';
 import { v4 as uuid } from 'uuid';
 
 import { logger } from './utils/logger.js';
-import { confirm } from './utils/confirm.js';
+import { prompt } from './utils/prompt.js';
+import { notice } from './utils/notice.js';
 
 export const uniqGuidCommand = {
   command: 'uniq-guid',
@@ -22,7 +23,7 @@ export const uniqGuidCommand = {
       if (options.uuidfield == 'guid') throw new Error("--uuidfield cannot be \"guid\" as this will clash with internal unity guids");
 
       if (options.dry) {
-        logger.newline().heading('    >>> DRY MODE <<<    ').heading('no changes will be made!').newline();
+        notice.dryRun(logger);
       } else {
         logger.newline();
       }
@@ -68,7 +69,7 @@ export const uniqGuidCommand = {
         logger.newline().warn(`Found ${chalk.redBright(duplicates.length)} duplicates.`)
         if (!options.dry) {
           logger.newline().info("Generate new UUIDs for duplicates?");
-          await confirm();
+          await prompt.confirm();
         }
         replaceDuplicateUuids(duplicates, options);
         if (!options.dry) {
