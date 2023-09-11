@@ -32,9 +32,27 @@ To see full list of commands, you can run:
 
 &nbsp;
 
+### ⚡ `init`
+
+Start setup wizard to capture preferences for easy-to-forget Unity settings, like company name, version, and WebGL compression.
+
+This modifies the Unity `ProjectSettings.asset` file.
+
+```
+./bin/cli.js init
+```
+
+**Options**
+
+| Flag           | Desc                                                          | Type           |
+|-------------------|------------------------------------------------------------|----------------|
+| `--dry`           | perform a dry run - preview changes                        | Boolean        |
+
+&nbsp;
+
 ### ⚡ `version`
 
-Bump the version in the Unity build. This updates the Unity `ProjectSettings.asset` file.
+Bump the version in the Unity build. This modifies the Unity `ProjectSettings.asset` file.
 
 ```
 ./bin/cli.js version --major
@@ -52,7 +70,6 @@ Bump the version in the Unity build. This updates the Unity `ProjectSettings.ass
 | `--patch`         | perform a patch version bump                               | Boolean        |
 | `--set`           | manually set the version number                            | String         |
 | `--dry`           | perform a dry run                                          | Boolean        |
-| `--verbose`       | verbose printout (only used in conjunction with `--dry`)   | Boolean        |
 
 &nbsp;
 
