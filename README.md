@@ -14,14 +14,9 @@ Steps to get up and running:
 Commands can be invoked like so:
 
 ```
-./bin/cli.js <command>
+./bin/cli.js <command> [<args>]
 # or
-npm start <command> -- <args>
-
-# example
-./bin/cli.js version --major
-npm start version -- --major
-# etc.
+npm start <command> [-- <args>]
 ```
 
 To see full list of commands, you can run:
@@ -56,8 +51,17 @@ Bump the version in the Unity build. This modifies the Unity `ProjectSettings.as
 
 ```
 ./bin/cli.js version --major
+```
+
+```
 ./bin/cli.js version --minor
+```
+
+```
 ./bin/cli.js version --patch
+```
+
+```
 ./bin/cli.js version --set 1.2.3
 ```
 
@@ -90,7 +94,7 @@ NOTE - this will not affect internal Unity Guids (e.g. those defined in `.meta` 
 | `--uuidfield`     | name of the uuid field to make unique                      | _uuid          |
 | `--searchdir`     | directory where to search for project assets               | Assets         |
 | `--dry`           | perform a dry run                                          | false          |
-| `--verbose`       | verbose printout                                           | false          |
+| `--verbose`       | verbose printout - (mainly for debugging)                  | false          |
 
 &nbsp;
 ### ⚡ `deploy`
@@ -100,8 +104,8 @@ Deploy a build to Itch.io using [Butler](https://itch.io/board/24575/butler).
 **Steps:**
 
 1. [Create a build in Unity](https://docs.unity3d.com/Manual/PublishingBuilds.html)
-1. Ensure `UNITY_WEBGL_BUILD_DIR` is set correctly in [.env](./.env.example#L4C1-L4C22)
-1. Run the command below
+1. Ensure `UNITY_WEBGL_BUILD_DIR` is set correctly in `.env` ([example](./.env.example#L4C1-L4C22))
+1. Run:
 
 ```
 ./bin/cli.js deploy
@@ -117,8 +121,8 @@ This is a great way to quickly test a local build independent of the Unity inter
 
 **Steps:**
 
-1. Ensure `UNITY_WEBGL_BUILD_DIR` is set correctly in [.env](./.env.example#L4C1-L4C22)
-1. Run the command below
+1. Ensure `UNITY_WEBGL_BUILD_DIR` is set correctly in `.env` ([example](./.env.example#L4C1-L4C22))
+1. Run:
 
 ```
 ./bin/cli.js webgl
